@@ -5,47 +5,48 @@
  * @tree: double pointer to the root node of the BST to insert the value
  * @value: value to store in the node to be inserted
  *
- * Description: If the address stored in tree is NULL, the created node must
- * become the root node. If the value is already present in the tree, it must
- * be ignored
- *
- * Return: a pointer to the created node, or NULL on failure
+ * Return: pointer to the created node, or NULL on failure
  */
 bst_t *bst_insert(bst_t **tree, int value)
 {
-	bst_t *tmp;
+	bst_t *current = NULL, *parent = NULL, *node = NULL;
+	int lr = 0;
 
-	if (tree)
+	if (!tree)
+		return (NULL);
+
+	current = *tree;
+
+	node = binary_tree_node(current, value);
+	if (!node)
+		return (NULL);
+
+	if (!current)
 	{
-		if (*tree == NULL)
+		*tree = node;
+		return (node);
+	}
+	while (1)
+	{
+		parent = current;
+
+		if (value < parent->n)
+			current = current->left, lr = 0;
+		else if (value > parent->n)
+			current = current->right, lr = 1;
+		else
+			break;
+
+		if (!current)
 		{
-			*tree = (bst_t *)binary_tree_node(NULL, value);
-			return (*tree);
-		}
-		tmp = *tree;
-		while (tmp)
-		{
-			if (tmp->n == value)
-				break;
-			if (tmp->n > value)
-			{
-				if (!tmp->left)
-				{
-					tmp->left = (bst_t *)binary_tree_node(tmp, value);
-					return (tmp->left);
-				}
-				tmp = tmp->left;
-			}
-			else if (tmp->n < value)
-			{
-				if (!tmp->right)
-				{
-					tmp->right = (bst_t *)binary_tree_node(tmp, value);
-					return (tmp->right);
-				}
-				tmp = tmp->right;
-			}
+			if (lr == 0)
+				parent->left = node;
+			else
+				parent->right = node;
+			node->parent = parent;
+			return (node);
 		}
 	}
+	free(node);
 	return (NULL);
 }

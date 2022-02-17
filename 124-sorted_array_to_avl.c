@@ -1,63 +1,56 @@
 #include "binary_trees.h"
 
 /**
- * create_tree - creates an AVL tree with recursion
+ * sort_insert - Auxiliary Function for sort insertion
+ * @array: pointer to the first element of the array to be converted
+ * @min: lower limit
+ * @max: upper limit
  *
- * @node: pointer node
- * @array: input array of integers
- * @size: size of array
- * @mode: 1 to adding on the left, 2 to adding on the right
- * Return: no return
+ * Return: pointer to the root node of the created AVL tree, or NULL on failure
  */
-void create_tree(avl_t **node, int *array, size_t size, int mode)
+
+avl_t *sort_insert(int *array, int min, int max)
 {
-	size_t middle;
+	int half;
+	avl_t *tree;
 
-	if (size == 0)
-		return;
+	if (min > max)
+		return (NULL);
 
-	middle = (size / 2);
-	middle = (size % 2 == 0) ? middle - 1 : middle;
+	half = (max + min) / 2;
 
-	if (mode == 1)
-	{
-		(*node)->left = binary_tree_node(*node, array[middle]);
-		create_tree(&((*node)->left), array, middle, 1);
-		create_tree(&((*node)->left), array + middle + 1, (size - 1 - middle), 2);
-	}
-	else
-	{
-		(*node)->right = binary_tree_node(*node, array[middle]);
-		create_tree(&((*node)->right), array, middle, 1);
-		create_tree(&((*node)->right), array + middle + 1, (size - 1 - middle), 2);
-	}
+	tree = binary_tree_node(NULL, array[half]);
+	if (!tree)
+		return (NULL);
+
+	tree->left = sort_insert(array, min, half - 1);
+
+	tree->right = sort_insert(array, half + 1, max);
+
+	if (tree->left)
+		tree->left->parent = tree;
+
+	if (tree->right)
+		tree->right->parent = tree;
+
+	return (tree);
 }
 
 /**
- * sorted_array_to_avl - creates root node and calls to create_tree
+ * sorted_array_to_avl - builds an AVL tree from an array
+ * @array: pointer to the first element of the array to be converted
+ * @size: number of element in the array
  *
- * @array: input array of integers
- * @size: size of array
- * Return: pointer to the root
+ * Return: pointer to the root node of the created AVL tree, or NULL on failure
  */
 avl_t *sorted_array_to_avl(int *array, size_t size)
 {
-	avl_t *root;
-	size_t middle;
+	avl_t *root = NULL;
 
-	root = NULL;
-
-	if (size == 0)
+	if (!array || size < 1)
 		return (NULL);
 
-	middle = (size / 2);
-
-	middle = (size % 2 == 0) ? middle - 1 : middle;
-
-	root = binary_tree_node(root, array[middle]);
-
-	create_tree(&root, array, middle, 1);
-	create_tree(&root, array + middle + 1, (size - 1 - middle), 2);
+	root = sort_insert(array, 0, size - 1);
 
 	return (root);
 }

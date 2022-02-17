@@ -1,91 +1,104 @@
 #include "binary_trees.h"
-#include <stdio.h>
-
 /**
- * binary_tree_is_leaf - checks if a node is a leaf
- * @node: pointer to the node to check
+ * binary_tree_height_add - measures the sum of heights of a binary tree
+ * @tree: pointer to the root node of the tree to measure the height
  *
- * Return: 1 if node is a leaf, and 0 otherwise. If node is NULL, return 0
+ * Return: Height or 0 if tree is NULL
  */
-int binary_tree_is_leaf(const binary_tree_t *node)
+size_t binary_tree_height_add(const binary_tree_t *tree)
 {
-	if (node != NULL && node->left == NULL && node->right == NULL)
-		return (1);
-	return (0);
-}
+	size_t height_l = 0;
+	size_t height_r = 0;
 
-/**
- * binary_tree_height - measures the height of a binary tree
- * @tree: pointer to the root node of the tree to measure the height of
- *
- * Return: the height of the tree. If tree is NULL, return 0
- */
-size_t binary_tree_height(const binary_tree_t *tree)
-{
-	size_t left, right;
-
-	if (tree == NULL)
+	if (!tree)
 		return (0);
-	left = binary_tree_height(tree->left);
-	right = binary_tree_height(tree->right);
-	if (left >= right)
-		return (1 + left);
-	return (1 + right);
+
+	height_l = 1 + binary_tree_height_add(tree->left);
+
+	height_r = 1 + binary_tree_height_add(tree->right);
+
+	if (height_l > height_r)
+		return (height_l);
+	return (height_r);
 }
-
 /**
- * binary_tree_is_perfect - checks if a binary tree is perfect
- * @tree: pointer to the root node of the tree to check
+ * runLevel - print nodes at given level order
+ * @tree: pointer to the root node of the tree to measure the height
+ * @level: number to refers at level in each point
+ * @last: variable to know if in last level of tree
+ * @left: checks if for semilast level node can be on left
+ * @ch: true or false for complete tree
+ * @prev: helps checks if node is leftmost when having childs
  *
- * Return: 1 if perfect, 0 otherwise. If tree is NULL, return 0
+ * Return: Height or 0 if tree is NULL
  */
-int binary_tree_is_perfect(const binary_tree_t *tree)
+void runLevel(const binary_tree_t *tree, int level, int last,
+	      int *left, int *ch, int *prev)
 {
-	binary_tree_t *l, *r;
+	if (!tree)
+		return;
 
-	if (tree == NULL)
-		return (1);
-	l = tree->left;
-	r = tree->right;
-	if (binary_tree_is_leaf(tree))
-		return (1);
-	if (l == NULL || r == NULL)
-		return (0);
-	if (binary_tree_height(l) == binary_tree_height(r))
+	if (level == 1 && last != 1)
 	{
-		if (binary_tree_is_perfect(l) && binary_tree_is_perfect(r))
-			return (1);
+		if (tree->left && !(tree->right) && !last)
+			*ch = 0;
+
+		if (tree->right && !(tree->left) && !last)
+			*ch = 0;
+
+		if (!(tree->left) && !(tree->right) && !last)
+			*ch = 0;
+
+		if ((tree->left || tree->right) && last && *prev)
+			*ch = 0;
+
+		if (!(tree->left) && !(tree->right) && last)
+			*prev = 1;
+
+		if (tree->left && !(*left) && last)
+			*ch = 0;
+
+		if (tree->left && last)
+			*left = 0;
+
+		if (tree->right && (*left) && last)
+			*ch = 0;
+
+		if (tree->right && !(*left) && last)
+			*left = 1;
 	}
-	return (0);
+
+	else if (level > 1)
+	{
+		runLevel(tree->left, level - 1, last, left, ch, prev);
+		runLevel(tree->right, level - 1, last, left, ch, prev);
+	}
 }
 /**
- * binary_tree_is_complete -  checks if a binary tree is complete
- * @tree: pointer to the root node of the tree to check
- *
- * Return: 1 if complete, 0 otherwise. If tree is NULL, return 0
+ * binary_tree_is_complete - checks if a tree is complete
+ * @tree: a pointer to the root node of the tree to traverse
+ * Return: 1 if complete, 0 if not
  */
+
 int binary_tree_is_complete(const binary_tree_t *tree)
 {
-	size_t l_height, r_height;
-	binary_tree_t *l, *r;
+	int height, i, check = 1, last = 0, left = 1, prev = 0;
 
-	if (tree == NULL)
+	if (!tree)
 		return (0);
-	if (binary_tree_is_leaf(tree))
-		return (1);
-	l = tree->left;
-	r = tree->right;
-	l_height = binary_tree_height(l);
-	r_height = binary_tree_height(r);
-	if (l_height == r_height)
+
+	/** Last = 1, SemiLast = 2 **/
+
+	height = binary_tree_height_add(tree);
+
+	for (i = 1; i <= height && check; i++)
 	{
-		if (binary_tree_is_perfect(l) && binary_tree_is_complete(r))
-			return (1);
+		if (i == height - 1)
+			last = 2;
+		else if (i == height)
+			last = 1;
+		runLevel(tree, i, last, &left, &check, &prev);
 	}
-	else if (l_height == r_height + 1)
-	{
-		if (binary_tree_is_complete(l) && binary_tree_is_perfect(r))
-			return (1);
-	}
-	return (0);
+
+	return (check);
 }
